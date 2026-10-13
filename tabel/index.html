@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RENTAL HUB — Табель</title>
+<style>
+:root{--o:#FF9500;--d:#151629;--g:#2a2c45}
+*{box-sizing:border-box;margin:0}
+body{background:var(--d);color:#fff;font:16px/1.4 system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px}
+.logo{font-weight:800;font-size:22px;letter-spacing:1px;margin-bottom:32px}
+.logo b{background:var(--o);color:var(--d);padding:2px 6px;margin-left:4px}
+.card{width:100%;max-width:380px;display:flex;flex-direction:column;gap:14px}
+input{padding:16px;border-radius:12px;border:1px solid var(--g);background:#1d1f36;color:#fff;font-size:18px}
+button{padding:22px;border:0;border-radius:14px;font-size:20px;font-weight:700;cursor:pointer}
+button:disabled{opacity:.4}
+.in{background:var(--o);color:var(--d)}
+.out{background:#fff;color:var(--d)}
+.name{font-size:20px;font-weight:700}
+.st{color:#aab}
+.msg{min-height:48px;padding:12px;border-radius:10px;display:none}
+.msg.err{display:block;background:#4a1d24;color:#ffb3b3}
+.msg.ok{display:block;background:#1d3a2a;color:#a6f0c0}
+.link{background:none;color:#778;font-size:14px;padding:8px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="logo">RENTAL<b>HUB</b></div>
+
+<div class="card" id="login">
+  <input id="phone" type="tel" placeholder="Номер телефона" autocomplete="tel">
+  <button class="in" onclick="login()">Войти</button>
+</div>
+
+<div class="card" id="main" hidden>
+  <div class="name" id="name"></div>
+  <div class="st" id="st"></div>
+  <button class="in" id="bIn" onclick="mark('in')">Пришёл</button>
+  <button class="out" id="bOut" onclick="mark('out')">Ушёл</button>
+  <button class="link" onclick="logout()">Выйти</button>
+</div>
+
+<div class="card"><div class="msg" id="msg"></div></div>
+
+<script>
+const API = 'ВСТАВЬТЕ_URL_APPS_SCRIPT';
+const ls = { get: k => { try { return localStorage.getItem(k) } catch { return null } }, set: (k, v) => { try { localStorage.setItem(k, v) } catch {} }, del: k => { try { localStorage.removeItem(k) } catch {} } };
+let device = ls.get('dev');
+if (!device) { device = crypto.randomUUID(); ls.set('dev', device); }
+const $ = id => document.getElementById(id);
+
+function say(t, ok) { const m = $('msg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
+function busy(b) { document.querySelectorAll('button').forEach(x => x.disabled = b); }
+
+async function call(body) {
+  const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ ...body, phone: ls.get('phone'), device }) });
+  return r.json();
+}
+
+function render(d) {
+  $('login').hidden = true; $('main').hidden = false;
+  $('name').textContent = d.name;
+  $('st').textContent = d.onShift ? `На смене: ${d.obj} с ${new Date(d.since).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}` : 'Не на смене';
+  $('bIn').hidden = d.onShift; $('bOut').hidden = !d.onShift;
+}
+
+async function login() {
+  const p = $('phone').value.replace(/\D/g, '');
+  if (p.length < 10) return say('Введите номер полностью');
+  ls.set('phone', p); busy(true); say('Проверка…', true);
+  try { const d = await call({ action: 'status' }); if (d.ok) { $('msg').className = 'msg'; render(d); } else { ls.del('phone'); say(d.msg); } }
+  catch { say('Нет связи с сервером'); }
+  busy(false);
+}
+
+function logout() { ls.del('phone'); $('main').hidden = true; $('login').hidden = false; }
+
+function mark(action) {
+  if (!navigator.geolocation) return say('Геолокация не поддерживается');
+  busy(true); say('Определяю местоположение…', true);
+  navigator.geolocation.getCurrentPosition(async pos => {
+    try {
+      const { latitude: lat, longitude: lon, accuracy: acc } = pos.coords;
+      const d = await call({ action, lat, lon, acc });
+      if (d.ok) { render(d); say(action === 'in' ? 'Приход отмечен: ' + d.obj : 'Уход отмечен', true); } else say(d.msg);
+    } catch { say('Нет связи с сервером'); }
+    busy(false);
+  }, e => { say(e.code === 1 ? 'Разрешите доступ к геолокации в настройках браузера' : 'Не удалось определить местоположение. Повторите'); busy(false); },
+  { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+}
+
+if (ls.get('phone')) { $('phone').value = ls.get('phone'); login(); }
+</script>
+</body>
+</html>
