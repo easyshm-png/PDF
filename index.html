@@ -798,7 +798,7 @@ function renderKp(m,o){
       '<td class="k-c">'+(it.qty!=null?fmt(it.qty):'')+'</td><td class="k-n">'+(it.price!=null?fmt(it.price):'')+'</td><td class="k-n k-b">'+(it.sum!=null?fmt(it.sum):'')+'</td>'+
       (ex?'<td class="k-c">'+(it.extra?'<span class="k-pill'+(used?' used':'')+'">'+esc(it.extra)+'</span>':'')+'</td>':'')+'</tr>'});
   h+='</tbody></table>';
-  h+='<div class="k-total><span>'+esc(m.total.label)+'</span><b>'+fmt(m.total.v)+(cur?'\u00a0'+esc(cur):'')+'</b></div>';
+  h+='<div class="k-total"><span>'+esc(m.total.label)+'</span><b>'+fmt(m.total.v)+(cur?'\u00a0'+esc(cur):'')+'</b></div>';
   if(m.notes&&m.notes.length)h+='<div class="k-notes"><b>Условия</b><ul>'+m.notes.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul></div>';
   h+='</div>';
   return '<div class="paper" style="--p-acc:'+o.accent+'">'+h+'</div>'}
