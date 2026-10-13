@@ -58,7 +58,7 @@ input[type=text]:focus-visible{outline:2px solid var(--accent);outline-offset:1p
 .p-top:before{content:"";position:absolute;right:-110px;top:-150px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,var(--p-acc) 0,transparent 68%);opacity:.72}
 .p-top:after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:var(--p-acc)}
 .p-co{position:relative;font-weight:600;font-size:13px;color:#C9CAE6;margin-bottom:14px}
-.p-title{position:relative;font-size:35px;font-weight:800;line-height:1.1;letter-spacing:-.02em;max-width:520px;margin:0;text-wrap:balance}
+.p-title{position:relative;font-size:35px;font-weight:800;line-height:1.1;letter-spacing:-.02em;white-space:nowrap;margin:0}
 .p-chips{position:relative;display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:22px;font-size:12px;color:#C9CAE6}
 .p-chips span{display:flex;align-items:center;gap:18px}
 .p-chips span+span:before{content:"";width:5px;height:5px;border-radius:50%;background:var(--p-acc);margin-left:-18px;margin-right:13px}
@@ -138,6 +138,7 @@ var FONTS={"r": {"b64": "AAEAAAAKAIAAAwAgT1MvMnKfFHoAAAEoAAAAYGNtYXADi/q0AAAGOAA
 /* PDF-генератор без библиотек: векторный текст (Inter, встроен), А4, постраничная вёрстка */
 /* PDF-генератор без библиотек: векторный текст (Inter, встроен), А4, постраничная вёрстка */
 /* PDF-генератор без библиотек: векторный текст (Inter, встроен), А4, постраничная вёрстка */
+/* PDF-генератор без библиотек: векторный текст (Inter, встроен), А4, постраничная вёрстка */
 function buildPdf(model,opt,F){
   var W=595.28,H=841.89,M=42,CW=W-2*M,INK='#15162B',MUT='#6B6C8A',LINE='#E3E4EF',SOFT='#F2F2F8';
   var pages=[],cur=null,usedG={},alphas={};
@@ -195,7 +196,7 @@ function buildPdf(model,opt,F){
     newPage();
     var top=opt.logo?42:36,hy=top;
     var co=opt.company?String(opt.company):'';
-    var tl=wrap(model.title,'x',29,CW-90,-0.5);
+    var tsz=29;while(tsz>20&&tw(model.title,'x',tsz,-0.5)>CW)tsz-=0.5;var tl=wrap(model.title,'x',tsz,CW,-0.5);
     var lg=opt.logo,lw=0,lh=0,pad=opt.plaque?7:0;
     if(lg){lh=38;lw=lh*lg.w/lg.h;if(lw>210){lw=210;lh=lw*lg.h/lg.w}}
     var rowH=lg?lh+pad*2+26:(co?22:0);
@@ -214,7 +215,7 @@ function buildPdf(model,opt,F){
       cy+=rowH;
     }else if(co){text(co,M,cy,'s',10.5,'#C9CAE6');cy+=22}
     cy+=26;
-    tl.forEach(function(t){text(t,M,cy,'x',29,'#FFFFFF','l',-0.5);cy+=33});
+    tl.forEach(function(t){text(t,M,cy,'x',tsz,'#FFFFFF','l',-0.5);cy+=33});
     cy-=33;
     if(model.chips.length){
       cy+=30;var x=M;
